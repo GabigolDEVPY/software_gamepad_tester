@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamepad Tester — Teste seu Controle no PC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: {
+                display: ['Syne','sans-serif'],
+                mono: ['JetBrains Mono','monospace']
+            }}}
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased}
+        ::-webkit-scrollbar{width:5px}
+        ::-webkit-scrollbar-track{background:#f1f1f1;border-radius:3px}
+        ::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:#aaa}
+        @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+        .pulse-dot{animation:pulse-dot 2s ease-in-out infinite}
+        @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .fade-in{animation:fade-in .5s ease forwards}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        .float-anim{animation:float 2.5s ease-in-out infinite}
+        input[type=range]{-webkit-appearance:none;appearance:none;height:6px;background:#e5e7eb;border-radius:999px;outline:none}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:#111;border-radius:50%;cursor:pointer;transition:transform .15s}
+        input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+        .btn-pill{
+            display:inline-flex;align-items:center;justify-content:center;
+            min-width:38px;height:30px;padding:0 10px;border-radius:8px;
+            font-size:11px;font-weight:700;border:1.5px solid #e5e7eb;
+            color:#9ca3af;background:#fff;transition:all .08s ease;user-select:none;
+        }
+        .btn-pill.on{transform:scale(1.1);box-shadow:0 2px 10px rgba(0,0,0,.15)}
+        .canvas-wrap{position:relative;background:#fafafa;border-radius:1rem;border:1px solid #e5e7eb;overflow:hidden}
+        canvas{display:block;width:100%;height:100%}
+        .panel{background:#fafafa;border-radius:.75rem;border:1px solid #e5e7eb;padding:1rem}
+        .panel-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:.5rem}
+    </style>
+</head>
+<body class="bg-white min-h-screen">
+
+<!-- Top Ad -->
+<div class="max-w-6xl mx-auto px-4 pt-4">
+    <div class="bg-gray-50 rounded-xl border border-gray-100 h-[90px] flex items-center justify-center text-gray-300 text-xs tracking-wider">PUBLICIDADE 728×90</div>
+</div>
+
+<!-- Header -->
+<header class="border-b border-gray-200 mt-4">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+            </div>
+            <div>
+                <h1 class="font-display text-lg font-extrabold tracking-tight leading-none">GAMEPAD TESTER</h1>
+                <p class="text-[10px] text-gray-400 mt-0.5 tracking-wider">TESTE COMPLETO DO SEU CONTROLE</p>
+            </div>
+        </div>
+        <div id="status" class="flex items-center gap-2 text-sm">
+            <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 shrink-0"></span>
+            <span id="status-text" class="text-gray-400 text-xs">Procurando…</span>
+        </div>
+    </div>
+</header>
+
+<!-- Main -->
+<main class="max-w-6xl mx-auto px-4 py-5">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+        <!-- Canvas 3/5 -->
+        <div class="lg:col-span-3">
+            <div class="canvas-wrap" style="aspect-ratio:16/10">
+                <canvas id="cv"></canvas>
+                <div id="overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-[#fafafa] z-10">
+                    <div class="float-anim text-6xl mb-5 select-none">🎮</div>
+                    <p class="font-display text-xl font-bold text-gray-800">Conecte seu controle</p>
+                    <p class="text-xs text-gray-400 mt-2">Aperte qualquer botão para começar</p>
+                    <p class="text-[10px] text-gray-300 mt-6 max-w-xs text-center leading-relaxed">Funciona com controles Xbox, PlayStation, Gamesit e genéricos via USB ou Bluetooth. Use Chrome, Edge ou Firefox.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panels 2/5 -->
+        <div class="lg:col-span-2 space-y-3" id="panels-side">
+
+            <!-- Buttons -->
+            <div class="panel">
+                <div class="panel-title">Botões</div>
+                <div id="btn-panel"></div>
+            </div>
+
+            <!-- Axes -->
+            <div class="panel">
+                <div class="panel-title">Analógicos</div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-[10px] text-gray-400 mb-1">Esquerdo</div>
+                        <div class="flex gap-4 text-xs"><span>X <b id="lx">0.00</b></span><span>Y <b id="ly">0.00</b></span></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-gray-400 mb-1">Direito</div>
+                        <div class="flex gap-4 text-xs"><span>X <b id="rx">0.00</b></span><span>Y <b id="ry">0.00</b></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Triggers -->
+            <div class="panel">
+                <div class="panel-title">Gatilhos</div>
+                <div class="space-y-2.5">
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1"><span class="text-gray-400">LT</span><b id="lt-pct">0 %</b></div>
+                        <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden"><div id="lt-bar" class="h-full bg-black rounded-full transition-all duration-75" style="width:0"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1"><span class="text-gray-400">RT</span><b id="rt-pct">0 %</b></div>
+                        <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden"><div id="rt-bar" class="h-full bg-black rounded-full transition-all duration-75" style="width:0"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vibration -->
+            <div class="panel">
+                <div class="panel-title">Vibração</div>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-[10px] text-gray-400 w-10">Força</span>
+                    <input type="range" id="vib-range" min="0" max="100" value="70" class="flex-1">
+                    <span id="vib-lbl" class="text-[11px] font-bold w-9 text-right">70 %</span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="btn-pulse"   class="flex-1 bg-black text-white text-[11px] font-bold py-2 rounded-lg hover:bg-gray-800 transition cursor-pointer">Pulso</button>
+                    <button id="btn-1s"      class="flex-1 bg-gray-800 text-white text-[11px] font-bold py-2 rounded-lg hover:bg-gray-700 transition cursor-pointer">1 s</button>
+                    <button id="btn-stop"    class="bg-red-500 text-white text-[11px] font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition cursor-pointer">■</button>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="panel">
+                <div class="panel-title">Informações</div>
+                <div id="info-id" class="text-[11px] text-gray-500 break-all leading-relaxed">Nenhum controlador conectado</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log -->
+    <div class="panel mt-5">
+        <div class="flex items-center justify-between mb-2">
+            <div class="panel-title mb-0">Log de Eventos</div>
+            <button id="btn-clr-log" class="text-[10px] text-gray-400 hover:text-gray-600 cursor-pointer">Limpar</button>
+        </div>
+        <div id="log" class="text-[11px] text-gray-500 h-28 overflow-y-auto space-y-px"><div class="text-gray-300 italic">Aguardando eventos…</div></div>
+    </div>
+
+    <!-- Bottom Ad -->
+    <div class="mt-5 bg-gray-50 rounded-xl border border-gray-100 h-[250px] flex items-center justify-center text-gray-300 text-xs tracking-wider">PUBLICIDADE 970×250</div>
+</main>
+
+<footer class="border-t border-gray-100 mt-8 py-5 text-center text-[10px] text-gray-300 tracking-wider">
+    GAMEPAD TESTER &mdash; Use um controle compatível (Xinput / Dinput)
+</footer>
+
+<script>
+class GamepadTester {
+    static NAMES = {0:'A',1:'B',2:'X',3:'Y',4:'LB',5:'RB',6:'LT',7:'RT',8:'Back',9:'Start',10:'L3',11:'R3',12:'D↑',13:'D↓',14:'D←',15:'D→',16:'Guide'};
+    static COLORS = {0:'#22c55e',1:'#ef4444',2:'#3b82f6',3:'#eab308'};
+    static GROUPS = [
+        {label:'Face',  ids:[0,1,2,3]},
+        {label:'Ombros',ids:[4,5]},
+        {label:'Centro',ids:[8,16,9]},
+        {label:'D-Pad', ids:[12,13,14,15]},
+        {label:'Sticks',ids:[10,11]},
+    ];
+
+    constructor(){
+        this.cv  = document.getElementById('cv');
+        this.ctx = this.cv.getContext('2d');
+        this.connected = false;
+        this.gp = null;
+        this.prev = {};
+        this.btns = [];
+        this.axes = [0,0,0,0];
+        this.cw = 0; this.ch = 0; this.dpr = 1;
+        this.buildPanel();
+        this.bind();
+        this.resize();
+        this.loop();
+    }
+
+    /* ── UI build ── */
+    buildPanel(){
+        const p = document.getElementById('btn-panel');
+        GamepadTester.GROUPS.forEach(g=>{
+            const s = document.createElement('div');
+            s.className = 'mb-2.5';
+            s.innerHTML = `<div class="text-[10px] text-gray-400 mb-1">${g.label}</div><div class="flex flex-wrap gap-1.5">${g.ids.map(i=>`<div class="btn-pill" id="bp${i}">${GamepadTester.NAMES[i]||'B'+i}</div>`).join('')}</div>`;
+            p.appendChild(s);
+        });
+    }
+
+    /* ── Events ── */
+    bind(){
+        window.addEventListener('gamepadconnected',e=>{this.onConnect(e.gamepad)});
+        window.addEventListener('gamepaddisconnected',()=>{this.onDisconnect()});
+        window.addEventListener('resize',()=>this.resize());
+        new ResizeObserver(()=>this.resize()).observe(this.cv.parentElement);
+        document.getElementById('vib-range').addEventListener('input',e=>{
+            document.getElementById('vib-lbl').textContent=e.target.value+' %';
+        });
+        document.getElementById('btn-pulse').addEventListener('click',()=>this.vibrate(200));
+        document.getElementById('btn-1s').addEventListener('click',()=>this.vibrate(1000));
+        document.getElementById('btn-stop').addEventListener('click',()=>this.stopVib());
+        document.getElementById('btn-clr-log').addEventListener('click',()=>{
+            document.getElementById('log').innerHTML='<div class="text-gray-300 italic">Log limpo</div>';
+        });
+    }
+
+    onConnect(gp){
+        this.connected=true; this.gp=gp;
+        this.setStatus(true);
+        this.log('Conectado: '+gp.id);
+        document.getElementById('overlay').style.display='none';
+        document.getElementById('info-id').textContent=gp.id;
+    }
+    onDisconnect(){
+        this.connected=false; this.gp=null; this.btns=[]; this.axes=[0,0,0,0];
+        this.setStatus(false);
+        this.log('Controlador desconectado');
+        document.getElementById('overlay').style.display='flex';
+        document.getElementById('info-id').textContent='Nenhum controlador conectado';
+    }
+    setStatus(ok){
+        const d=document.getElementById('status-dot'),t=document.getElementById('status-text');
+        d.className='w-2.5 h-2.5 rounded-full shrink-0 '+(ok?'bg-emerald-500 pulse-dot':'bg-gray-300');
+        t.className='text-xs '+(ok?'text-emerald-600 font-medium':'text-gray-400');
+        t.textContent=ok?'Conectado':'Desconectado';
+    }
+
+    /* ── Polling ── */
+    poll(){
+        const gps=navigator.getGamepads();
+        let f=null;
+        for(const g of gps)if(g){f=g;break;}
+        if(f){
+            if(!this.connected)this.onConnect(f);
+            this.gp=f;
+            f.buttons.forEach((b,i)=>{
+                const was=!!this.prev[i], now=b.pressed;
+                this.btns[i]={pressed:now,value:b.value};
+                if(now&&!was)this.log('Pressionado: '+(GamepadTester.NAMES[i]||'Btn'+i));
+                this.prev[i]=now;
+            });
+            for(let i=0;i<Math.min(f.axes.length,4);i++)this.axes[i]=f.axes[i];
+        }else if(this.connected)this.onDisconnect();
+    }
+
+    /* ── Loop ── */
+    loop(){this.poll();this.draw();this.updateUI();requestAnimationFrame(()=>this.loop());}
+
+    /* ── Resize ── */
+    resize(){
+        const r=this.cv.parentElement.getBoundingClientRect();
+        this.dpr=window.devicePixelRatio||1;
+        this.cw=r.width; this.ch=r.height;
+        this.cv.width=r.width*this.dpr;
+        this.cv.height=r.height*this.dpr;
+        this.cv.style.width=r.width+'px';
+        this.cv.style.height=r.height+'px';
+        this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);
+    }
+
+    /* ── UI updates ── */
+    updateUI(){
+        for(let i=0;i<17;i++){
+            const el=document.getElementById('bp'+i);
+            if(!el)continue;
+            const on=this.btns[i]?.pressed;
+            const c=GamepadTester.COLORS[i];
+            if(on){
+                el.style.background=c||'#111'; el.style.borderColor=c||'#111';
+                el.style.color='#fff'; el.classList.add('on');
+            }else{
+                el.style.background='#fff'; el.style.borderColor='#e5e7eb';
+                el.style.color='#9ca3af'; el.classList.remove('on');
+            }
+        }
+        const dz=v=>Math.abs(v)<.08?0:v;
+        document.getElementById('lx').textContent=dz(this.axes[0]).toFixed(2);
+        document.getElementById('ly').textContent=dz(this.axes[1]).toFixed(2);
+        document.getElementById('rx').textContent=dz(this.axes[2]).toFixed(2);
+        document.getElementById('ry').textContent=dz(this.axes[3]).toFixed(2);
+        const lt=this.btns[6]?.value||0, rt=this.btns[7]?.value||0;
+        document.getElementById('lt-bar').style.width=(lt*100)+'%';
+        document.getElementById('rt-bar').style.width=(rt*100)+'%';
+        document.getElementById('lt-pct').textContent=Math.round(lt*100)+' %';
+        document.getElementById('rt-pct').textContent=Math.round(rt*100)+' %';
+    }
+
+    /* ── Vibration ── */
+    vibrate(ms){
+        if(!this.gp)return;
+        const a=this.gp.vibrationActuator;
+        if(!a){this.log('Vibração não suportada');return;}
+        const s=+document.getElementById('vib-range').value/100;
+        a.playEffect('dual-rumble',{startDelay:0,duration:ms,weakMagnitude:s,strongMagnitude:s})
+         .then(()=>this.log(`Vibração ${Math.round(s*100)}% — ${ms}ms`))
+         .catch(e=>this.log('Erro: '+e.message));
+    }
+    stopVib(){
+        if(!this.gp)return;
+        const a=this.gp.vibrationActuator;
+        if(a)a.playEffect('dual-rumble',{startDelay:0,duration:0,weakMagnitude:0,strongMagnitude:0});
+        this.log('Vibração parada');
+    }
+
+    /* ── Log ── */
+    log(msg){
+        const el=document.getElementById('log');
+        const ph=el.querySelector('.italic'); if(ph)ph.remove();
+        const d=document.createElement('div');
+        d.className='py-0.5 border-b border-gray-50 last:border-0';
+        d.innerHTML=`<span class="text-gray-300">[${new Date().toLocaleTimeString('pt-BR')}]</span> ${msg}`;
+        el.appendChild(d); el.scrollTop=el.scrollHeight;
+        while(el.children.length>120)el.removeChild(el.firstChild);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       CANVAS DRAWING
+       ══════════════════════════════════════════════════════════ */
+    draw(){
+        const c=this.ctx;
+        c.clearRect(0,0,this.cw,this.ch);
+        if(!this.connected)return;
+
+        const W=this.cw, H=this.ch;
+        const cx=W/2, cy=H/2+H*.06;
+        const s=Math.min(W/580,H/400);
+
+        this.body(c,cx,cy,s);
+        this.sticks(c,cx,cy,s);
+        this.face(c,cx,cy,s);
+        this.dpad(c,cx,cy,s);
+        this.bumpers(c,cx,cy,s);
+        this.triggers(c,cx,cy,s);
+        this.center(c,cx,cy,s);
+
+        c.fillStyle='#6b7280';
+        c.font=`${Math.round(10*s)}px 'Syne',sans-serif`;
+        c.textAlign='center'; c.textBaseline='middle';
+        c.fillText('Visualização ao Vivo',cx,cy-95*s);
+    }
+
+    /* rounded rect */
+    rr(c,x,y,w,h,r){
+        c.beginPath();
+        c.moveTo(x+r,y); c.lineTo(x+w-r,y);
+        c.quadraticCurveTo(x+w,y,x+w,y+r); c.lineTo(x+w,y+h-r);
+        c.quadraticCurveTo(x+w,y+h,x+w-r,y+h); c.lineTo(x+r,y+h);
+        c.quadraticCurveTo(x,y+h,x,y+h-r); c.lineTo(x,y+r);
+        c.quadraticCurveTo(x,y,x+r,y); c.closePath();
+    }
+
+    /* body */
+    body(c,cx,cy,s){
+        c.save();
+        c.shadowColor='rgba(0,0,0,.10)'; c.shadowBlur=30*s; c.shadowOffsetY=6*s;
+        this.rr(c,cx-175*s,cy-60*s,350*s,135*s,32*s);
+        const g=c.createLinearGradient(0,cy-60*s,0,cy+75*s);
+        g.addColorStop(0,'#272727'); g.addColorStop(1,'#1a1a1a');
+        c.fillStyle=g; c.fill();
+        c.restore();
+
+        /* grips */
+        c.save(); c.shadowColor='rgba(0,0,0,.06)'; c.shadowBlur=12*s; c.shadowOffsetY=4*s;
+        this.rr(c,cx-175*s,cy+38*s,58*s,72*s,18*s); c.fillStyle='#222'; c.fill();
+        this.rr(c,cx+117*s,cy+38*s,58*s,72*s,18*s); c.fillStyle='#222'; c.fill();
+        c.restore();
+
+        /* subtle top highlight */
+        c.save(); c.globalAlpha=.04;
+        this.rr(c,cx-170*s,cy-58*s,340*s,40*s,28*s); c.fillStyle='#fff'; c.fill();
+        c.restore();
+    }
+
+    /* single stick */
+    stick1(c,x,y,r,ax,ay,bi,s){
+        const vx=this.axes[ax]||0, vy=this.axes[ay]||0;
+        const dz=v=>Math.abs(v)<.08?0:v;
+        const ax2=dz(vx), ay2=dz(vy);
+        const pressed=this.btns[bi]?.pressed;
+
+        /* recess */
+        c.beginPath(); c.arc(x,y,r+5*s,0,Math.PI*2);
+        c.fillStyle='#131313'; c.fill();
+
+        /* crosshair */
+        c.save(); c.strokeStyle='#222'; c.lineWidth=1; c.setLineDash([3,4]);
+        c.beginPath(); c.moveTo(x-r,y); c.lineTo(x+r,y); c.moveTo(x,y-r); c.lineTo(x,y+r);
+        c.stroke(); c.setLineDash([]); c.restore();
+
+        /* position */
+        const px=x+ax2*(r-6*s), py=y+ay2*(r-6*s);
+        const sr=9*s;
+        const moved=Math.abs(ax2)>.08||Math.abs(ay2)>.08;
+
+        if(moved||pressed){c.save();c.shadowColor=pressed?'rgba(255,255,255,.25)':'rgba(255,255,255,.1)';c.shadowBlur=12*s;}
+
+        c.beginPath(); c.arc(px,py,sr,0,Math.PI*2);
+        const gr=c.createRadialGradient(px-2*s,py-2*s,0,px,py,sr);
+        if(pressed){gr.addColorStop(0,'#fff');gr.addColorStop(1,'#ccc');}
+        else{gr.addColorStop(0,'#4a4a4a');gr.addColorStop(1,'#2a2a2a');}
+        c.fillStyle=gr; c.fill();
+
+        if(moved||pressed) c.restore();
+
+        /* label */
+        c.fillStyle='#333'; c.font=`bold ${Math.round(7*s)}px 'JetBrains Mono',monospace`;
+        c.textAlign='center'; c.textBaseline='middle';
+        c.fillText(ax===0?'LS':'RS',x,y+r+12*s);
+    }
+
+    sticks(c,cx,cy,s){
+        this.stick1(c,cx-95*s,cy-10*s,28*s,0,1,10,s);
+        this.stick1(c,cx+50*s,cy+40*s,28*s,2,3,11,s);
+    }
+
+    face(c,cx,cy,s){
+        const bx=cx+115*s, by=cy-10*s, r=13*s, d=30*s;
+        [{i:0,dx:0,dy:1,c:'#22c55e',n:'A'},{i:1,dx:1,dy:0,c:'#ef4444',n:'B'},
+         {i:2,dx:-1,dy:0,c:'#3b82f6',n:'X'},{i:3,dx:0,dy:-1,c:'#eab308',n:'Y'}]
+        .forEach(b=>{
+            const x=bx+b.dx*d, y=by+b.dy*d;
+            const on=this.btns[b.i]?.pressed;
+            c.beginPath(); c.arc(x,y,r,0,Math.PI*2);
+            if(on){c.save();c.shadowColor=b.c;c.shadowBlur=14*s;c.fillStyle=b.c;c.fill();c.restore();c.fillStyle=b.c;c.fill();}
+            else{c.fillStyle='#303030';c.fill();c.strokeStyle='#444';c.lineWidth=1.2;c.stroke();}
+            c.fillStyle=on?'#fff':'#777'; c.font=`bold ${Math.round(10*s)}px 'JetBrains Mono',monospace`;
+            c.textAlign='center'; c.textBaseline='middle'; c.fillText(b.n,x,y);
+        });
+    }
+
+    dpad(c,cx,cy,s){
+        const dx=cx-15*s, dy=cy+40*s, sz=10*s, g=24*s;
+        /* center */
+        c.fillStyle='#282828'; this.rr(c,dx-sz,dy-sz,sz*2,sz*2,2*s); c.fill();
+        [{i:12,dx:0,dy:-1,n:'▲'},{i:13,dx:0,dy:1,n:'▼'},
+         {i:14,dx:-1,dy:0,n:'◀'},{i:15,dx:1,dy:0,n:'▶'}]
+        .forEach(d=>{
+            const x=dx+d.dx*g, y=dy+d.dy*g;
+            const on=this.btns[d.i]?.pressed;
+            c.fillStyle=on?'#fff':'#303030';
+            this.rr(c,x-sz,y-sz,sz*2,sz*2,2*s); c.fill();
+            if(on){c.save();c.shadowColor='rgba(255,255,255,.2)';c.shadowBlur=8*s;c.fill();c.restore();}
+            c.fillStyle=on?'#000':'#666'; c.font=`${Math.round(9*s)}px sans-serif`;
+            c.textAlign='center'; c.textBaseline='middle'; c.fillText(d.n,x,y);
+        });
+    }
+
+    bumpers(c,cx,cy,s){
+        [{i:4,x:cx-145*s,n:'LB'},{i:5,x:cx+90*s,n:'RB'}].forEach(b=>{
+            const on=this.btns[b.i]?.pressed;
+            this.rr(c,b.x,cy-68*s,55*s,13*s,4*s);
+            c.fillStyle=on?'#fff':'#252525'; c.fill();
+            if(on){c.save();c.shadowColor='rgba(255,255,255,.15)';c.shadowBlur=8*s;c.fill();c.restore();}
+            c.fillStyle=on?'#000':'#555'; c.font=`bold ${Math.round(7*s)}px 'JetBrains Mono',monospace`;
+            c.textAlign='center'; c.textBaseline='middle'; c.fillText(b.n,b.x+27.5*s,cy-61.5*s);
+        });
+    }
+
+    triggers(c,cx,cy,s){
+        const lt=this.btns[6]?.value||0, rt=this.btns[7]?.value||0;
+        const bw=55*s, bh=6*s, by=cy-82*s;
+        [{v:lt,x:cx-145*s,n:'LT'},{v:rt,x:cx+90*s,n:'RT'}].forEach(t=>{
+            this.rr(c,t.x,by,bw,bh,3*s); c.fillStyle='#181818'; c.fill();
+            if(t.v>.005){this.rr(c,t.x,by,bw*t.v,bh,3*s);c.fillStyle='#fff';c.fill();}
+            c.fillStyle='#444'; c.font=`${Math.round(6*s)}px 'JetBrains Mono',monospace`;
+            c.textAlign='center'; c.textBaseline='middle'; c.fillText(t.n,t.x+bw/2,by-7*s);
+        });
+    }
+
+    center(c,cx,cy,s){
+        const by=cy-18*s;
+        [{i:8,dx:-25,r:6,n:'◀'},{i:16,dx:0,r:9,n:'●',gl:true},{i:9,dx:25,r:6,n:'▶'}].forEach(b=>{
+            const x=cx+b.dx*s, on=this.btns[b.i]?.pressed;
+            c.beginPath(); c.arc(x,by,b.r*s,0,Math.PI*2);
+            if(on){
+                c.save();
+                if(b.gl){c.shadowColor='#eab308';c.shadowBlur=12*s;c.fillStyle='#eab308';}
+                else{c.shadowColor='rgba(255,255,255,.2)';c.shadowBlur=8*s;c.fillStyle='#fff';}
+                c.fill(); c.restore(); c.fill();
+            }else{c.fillStyle='#303030';c.fill();}
+            c.fillStyle=on?(b.gl?'#000':'#000'):'#555';
+            c.font=`${Math.round(7*s)}px sans-serif`;
+            c.textAlign='center'; c.textBaseline='middle'; c.fillText(b.n,x,by);
+        });
+    }
+}
+
+/* boot */
+const tester = new GamepadTester();
+</script>
+</body>
+</html>
