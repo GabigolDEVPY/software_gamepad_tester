@@ -3,507 +3,621 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gamepad Tester — Teste seu Controle no PC</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: { fontFamily: {
-                display: ['Syne','sans-serif'],
-                mono: ['JetBrains Mono','monospace']
-            }}}
-        }
-    </script>
+    <title>Gamepad Tester — Teste seu Controle</title>
+    <meta name="description" content="Ferramenta gratuita para testar controles de videogame no navegador.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body{font-family:'JetBrains Mono',monospace;-webkit-font-smoothing:antialiased}
-        ::-webkit-scrollbar{width:5px}
-        ::-webkit-scrollbar-track{background:#f1f1f1;border-radius:3px}
-        ::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
-        ::-webkit-scrollbar-thumb:hover{background:#aaa}
-        @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-        .pulse-dot{animation:pulse-dot 2s ease-in-out infinite}
-        @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        .fade-in{animation:fade-in .5s ease forwards}
-        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-        .float-anim{animation:float 2.5s ease-in-out infinite}
-        input[type=range]{-webkit-appearance:none;appearance:none;height:6px;background:#e5e7eb;border-radius:999px;outline:none}
-        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:#111;border-radius:50%;cursor:pointer;transition:transform .15s}
-        input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
-        .btn-pill{
-            display:inline-flex;align-items:center;justify-content:center;
-            min-width:38px;height:30px;padding:0 10px;border-radius:8px;
-            font-size:11px;font-weight:700;border:1.5px solid #e5e7eb;
-            color:#9ca3af;background:#fff;transition:all .08s ease;user-select:none;
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#ffffff;--bg-alt:#f8f9fa;--bg-card:#ffffff;
+            --border:#e5e7eb;--border-light:#f0f0f0;
+            --text:#111827;--text-sec:#6b7280;--text-muted:#9ca3af;--text-dim:#d1d5db;
+            --black:#111827;--white:#ffffff;
+            --radius:10px;--radius-sm:6px;
         }
-        .btn-pill.on{transform:scale(1.1);box-shadow:0 2px 10px rgba(0,0,0,.15)}
-        .canvas-wrap{position:relative;background:#fafafa;border-radius:1rem;border:1px solid #e5e7eb;overflow:hidden}
-        canvas{display:block;width:100%;height:100%}
-        .panel{background:#fafafa;border-radius:.75rem;border:1px solid #e5e7eb;padding:1rem}
-        .panel-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:.5rem}
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.6}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:99px}
+
+        /* NAVBAR */
+        .navbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+        .navbar-inner{max-width:920px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between}
+        .navbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+        .navbar-logo{width:28px;height:28px;background:var(--black);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .navbar-logo svg{width:14px;height:14px;color:var(--white)}
+        .navbar-title{font-weight:700;font-size:14px;letter-spacing:-0.01em}
+        .navbar-links{display:flex;align-items:center;gap:2px}
+        .navbar-links a{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;padding:6px 12px;border-radius:4px;transition:color 0.15s,background 0.15s}
+        .navbar-links a:hover{color:var(--text);background:rgba(0,0,0,0.03)}
+        .navbar-links a.active{color:var(--text)}
+        .status-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        .status-dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim);transition:background 0.3s}
+        .status-dot.on{background:#10b981;box-shadow:0 0 6px rgba(16,185,129,0.3)}
+
+        /* LAYOUT */
+        .container{max-width:920px;margin:0 auto;padding:0 24px}
+        section{padding:48px 0}
+        section+section{border-top:1px solid var(--border-light)}
+
+        /* HERO */
+        .hero{padding:56px 0 40px;text-align:center}
+        .hero h1{font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;margin-bottom:10px;color:var(--black)}
+        .hero p{color:var(--text-sec);font-size:14px;max-width:480px;margin:0 auto;line-height:1.7}
+
+        /* CARDS */
+        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+        .card-h{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+        .card-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        .card-b{padding:20px}
+
+        /* TESTER GRID */
+        .tester-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+        @media(max-width:768px){.tester-grid{grid-template-columns:1fr}}
+        .controller-area{position:relative;min-height:340px;display:flex;align-items:center;justify-content:center}
+        .controller-area svg{width:100%;max-width:320px;opacity:0.08;transition:opacity 0.5s}
+        .controller-area svg.active{opacity:1}
+        .overlay-connect{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.95);z-index:10;transition:opacity 0.3s}
+        .overlay-connect.hidden{opacity:0;pointer-events:none}
+        .overlay-icon{font-size:36px;margin-bottom:10px;opacity:0.2;filter:grayscale(1)}
+        .overlay-t{font-size:15px;font-weight:600;color:var(--text)}
+        .overlay-s{font-size:12px;color:var(--text-muted);margin-top:3px}
+
+        /* SIDEBAR */
+        .side-stack{display:flex;flex-direction:column;gap:12px}
+        .metric-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim);margin-bottom:5px;font-family:'JetBrains Mono',monospace}
+        .metric-row{display:flex;gap:16px;font-family:'JetBrains Mono',monospace;font-size:12px}
+        .metric-row span{color:var(--text-muted)}
+        .metric-row b{color:var(--text);font-weight:500}
+        .trig-wrap{margin-bottom:10px}.trig-wrap:last-child{margin-bottom:0}
+        .trig-info{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;font-family:'JetBrains Mono',monospace}
+        .trig-info .n{color:var(--text-dim)}.trig-info .v{font-weight:500;color:var(--text-muted)}
+        .trig-track{height:3px;background:#f0f0f0;border-radius:99px;overflow:hidden}
+        .trig-fill{height:100%;width:0%;background:var(--black);border-radius:99px;transition:width 60ms linear}
+
+        /* VIB */
+        .vib-sw{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+        input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:3px;background:#e5e7eb;border-radius:99px;outline:none}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--black);border-radius:50%;cursor:pointer}
+        input[type=range]::-moz-range-thumb{width:12px;height:12px;background:var(--black);border-radius:50%;cursor:pointer;border:none}
+        .vib-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--text-muted);width:32px;text-align:right}
+        .btn-row{display:flex;gap:6px}
+        .btn{flex:1;padding:7px 0;border:1px solid var(--border);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;transition:all 0.12s;text-align:center;background:transparent;color:var(--text-sec);letter-spacing:0.02em}
+        .btn:active{transform:scale(0.97)}
+        .btn-p{background:var(--black);color:var(--white);border-color:var(--black);font-weight:600}
+        .btn-p:hover{background:#374151}
+        .btn-g:hover{background:var(--bg-alt);color:var(--text)}
+        .btn-sm{padding:7px 12px;flex:none}
+
+        /* LOG */
+        .ev-log{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);height:100px;overflow-y:auto;line-height:1.9}
+        .ev-log .ph{font-style:italic;color:var(--text-dim)}
+        .ev-log .t{color:var(--text-dim);margin-right:6px}
+
+        /* ANALOG TEST */
+        .analog-test-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        @media(max-width:600px){.analog-test-grid{grid-template-columns:1fr}}
+        .stick-canvas-wrap{position:relative;aspect-ratio:1;max-width:240px;margin:0 auto}
+        .stick-canvas{width:100%;height:100%;border-radius:var(--radius)}
+        .stick-info{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:2;color:var(--text-sec)}
+        .stick-info .label{color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;font-size:9px}
+        .stick-info .val{color:var(--text);font-weight:500}
+        .stick-info .val.bad{color:#ef4444}
+        .stick-info .val.ok{color:#10b981}
+        .health-bar{height:4px;background:#f0f0f0;border-radius:99px;overflow:hidden;margin-top:4px;margin-bottom:8px}
+        .health-fill{height:100%;border-radius:99px;transition:width 0.3s,background 0.3s}
+        .test-controls{display:flex;gap:6px;margin-top:12px;justify-content:center}
+
+        /* SECTIONS */
+        .section-title{font-size:18px;font-weight:700;letter-spacing:-0.02em;margin-bottom:6px;color:var(--black)}
+        .section-sub{font-size:13px;color:var(--text-sec);margin-bottom:24px;max-width:520px;line-height:1.7}
+
+        /* FAQ */
+        .faq-list{display:flex;flex-direction:column;gap:1px}
+        .faq-item{background:var(--bg-card);border:1px solid var(--border);overflow:hidden}
+        .faq-item:first-child{border-radius:var(--radius) var(--radius) 0 0}
+        .faq-item:last-child{border-radius:0 0 var(--radius) var(--radius)}
+        .faq-q{width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);text-align:left;transition:background 0.12s}
+        .faq-q:hover{background:var(--bg-alt)}
+        .faq-chevron{width:16px;height:16px;color:var(--text-dim);transition:transform 0.2s;flex-shrink:0;margin-left:16px}
+        .faq-item.open .faq-chevron{transform:rotate(180deg)}
+        .faq-a{max-height:0;overflow:hidden;transition:max-height 0.25s}
+        .faq-ai{padding:0 16px 14px;font-size:12px;color:var(--text-sec);line-height:1.75}
+        .faq-ai code{font-family:'JetBrains Mono',monospace;font-size:10px;background:#f3f4f6;padding:1px 5px;border-radius:3px;color:var(--text)}
+
+        /* MODAL */
+        .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.25);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+        .modal-bg.vis{opacity:1;pointer-events:auto}
+        .modal{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);width:90%;max-width:560px;max-height:80vh;overflow-y:auto;transform:translateY(8px);transition:transform 0.2s;box-shadow:0 20px 60px rgba(0,0,0,0.1)}
+        .modal-bg.vis .modal{transform:translateY(0)}
+        .modal-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:1}
+        .modal-h h2{font-size:14px;font-weight:700}
+        .modal-x{width:28px;height:28px;border:1px solid var(--border);background:transparent;border-radius:4px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.12s;font-size:16px}
+        .modal-x:hover{background:var(--bg-alt)}
+        .modal-body{padding:20px;font-size:12px;color:var(--text-sec);line-height:1.8}
+        .modal-body h3{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 4px;font-family:'JetBrains Mono',monospace}
+        .modal-body h3:first-child{margin-top:0}
+        .modal-body p{margin-bottom:8px}
+
+        /* FOOTER */
+        footer{border-top:1px solid var(--border-light);padding:24px 0;text-align:center}
+        footer p{font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;letter-spacing:0.06em}
+        footer a{color:var(--text-muted);text-decoration:none;transition:color 0.15s}
+        footer a:hover{color:var(--text)}
+
+        /* ANIM */
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .fade-up{opacity:0;animation:fadeUp 0.4s ease forwards}
+        @keyframes pulseG{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.3)}70%{box-shadow:0 0 0 4px rgba(16,185,129,0)}}
+        .pulse-g{animation:pulseG 2s ease infinite}
+        #gp path,#gp rect,#gp circle{transition:fill 80ms ease,stroke 80ms ease}
     </style>
 </head>
-<body class="bg-white min-h-screen">
+<body>
 
-<!-- Top Ad -->
-<div class="max-w-6xl mx-auto px-4 pt-4">
-    <div class="bg-gray-50 rounded-xl border border-gray-100 h-[90px] flex items-center justify-center text-gray-300 text-xs tracking-wider">PUBLICIDADE 728×90</div>
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="#" class="navbar-brand">
+            <div class="navbar-logo"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg></div>
+            <span class="navbar-title">Gamepad Tester</span>
+        </a>
+        <div class="navbar-links">
+            <a href="#tester" class="active">Testar</a>
+            <a href="#analog">Analógicos</a>
+            <a href="#faq">FAQ</a>
+            <a href="#" id="openPriv">Privacidade</a>
+            <div class="status-badge" style="margin-left:8px">
+                <span class="status-dot" id="navDot"></span>
+                <span id="navSt">Offline</span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<div class="container">
+    <section class="hero fade-up">
+        <h1>Teste e Depure seu Controle</h1>
+        <p>Visualize botões, analógicos e gatilhos em tempo real. Teste a saúde dos sticks, vibração e detecte drift automaticamente.</p>
+    </section>
 </div>
 
-<!-- Header -->
-<header class="border-b border-gray-200 mt-4">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+<!-- TESTER -->
+<div class="container" id="tester">
+    <section class="fade-up">
+        <div class="tester-grid">
+            <div class="card">
+                <div class="card-h">
+                    <span class="card-l">Visualização</span>
+                    <span id="gpName" style="font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                </div>
+                <div class="card-b controller-area">
+                    <div class="overlay-connect" id="overlay">
+                        <p class="overlay-icon">🎮</p>
+                        <p class="overlay-t">Conecte seu controle</p>
+                        <p class="overlay-s">USB ou Bluetooth — pressione qualquer botão</p>
+                    </div>
+                    <svg id="gp" viewBox="0 0 441 403">
+                        <defs><linearGradient id="bf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8e8e8"/><stop offset="100%" stop-color="#d4d4d4"/></linearGradient></defs>
+                        <g id="XBox">
+                            <g transform="translate(0,20)"><path d="M220.5 92C200.5 92 154 92 128 92C95.5 92 66.5 109.5 55 137.5C43.5 165.5 4 271.1 4 317.5C4 363.9 17.5 378.5 49.5 378.5C81.5 378.5 105 294.5 150 294.5C195 294.5 220.5 294.5 220.5 294.5C220.5 294.5 245.5 294.5 290.5 294.5C335.5 294.5 359 378.5 391 378.5C423 378.5 436.5 363.9 436.5 317.5C436.5 271.1 397 165.5 385.5 137.5C374 109.5 345 92 312.5 92C286.5 92 240 92 220.5 92Z" fill="#000" fill-opacity="0.03"/></g>
+                            <path d="M220.5 92C200.5 92 154 92 128 92C95.5 92 66.5 109.5 55 137.5C43.5 165.5 4 271.1 4 317.5C4 363.9 17.5 378.5 49.5 378.5C81.5 378.5 105 294.5 150 294.5C195 294.5 220.5 294.5 220.5 294.5C220.5 294.5 245.5 294.5 290.5 294.5C335.5 294.5 359 378.5 391 378.5C423 378.5 436.5 363.9 436.5 317.5C436.5 271.1 397 165.5 385.5 137.5C374 109.5 345 92 312.5 92C286.5 92 240 92 220.5 92Z" stroke="#ccc" stroke-width="2" fill="url(#bf)"/>
+                            <circle id="LStickOutline" cx="113" cy="160" r="37.5" stroke="#ccc" stroke-width="2" fill="none"/>
+                            <circle id="RStickOutline" cx="278" cy="238" r="37.5" stroke="#ccc" stroke-width="2" fill="none"/>
+                            <circle id="DOutline" cx="166" cy="238" r="37.5" stroke="#ccc" stroke-width="2" fill="none"/>
+                            <circle id="BOutline" cx="329" cy="160" r="37.5" stroke="#ccc" stroke-width="2" fill="none"/>
+                            <circle id="LeftStick" cx="113" cy="160" r="28" fill="rgba(0,0,0,0)" stroke="#999" stroke-width="2"/>
+                            <circle id="LStickDot" cx="113" cy="160" r="20" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="3"/>
+                            <circle id="RightStick" cx="278" cy="238" r="28" fill="rgba(0,0,0,0)" stroke="#999" stroke-width="2"/>
+                            <circle id="RStickDot" cx="278" cy="238" r="20" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="3"/>
+                            <g id="DUp"><mask id="m-du" fill="white"><path d="M177.669 222.335C180.793 219.21 180.816 213.997 176.868 212.014C176.327 211.743 175.776 211.491 175.215 211.258C172.182 210.002 168.931 209.355 165.648 209.355C162.365 209.355 159.114 210.002 156.081 211.258C155.521 211.491 154.969 211.743 154.429 212.014C150.48 213.997 150.503 219.21 153.627 222.335L159.991 228.698C163.116 231.823 168.181 231.823 171.305 228.698L177.669 222.335Z"/></mask><path d="M177.669 222.335C180.793 219.21 180.816 213.997 176.868 212.014C176.327 211.743 175.776 211.491 175.215 211.258C172.182 210.002 168.931 209.355 165.648 209.355C162.365 209.355 159.114 210.002 156.081 211.258C155.521 211.491 154.969 211.743 154.429 212.014C150.48 213.997 150.503 219.21 153.627 222.335L159.991 228.698C163.116 231.823 168.181 231.823 171.305 228.698L177.669 222.335Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-du)"/></g>
+                            <g id="DRight"><mask id="m-dr" fill="white"><path d="M181.447 249.669C184.571 252.793 189.785 252.816 191.768 248.868C192.039 248.327 192.291 247.776 192.523 247.215C193.78 244.182 194.426 240.931 194.426 237.648C194.426 234.365 193.78 231.114 192.523 228.081C192.291 227.521 192.039 226.969 191.768 226.429C189.785 222.48 184.571 222.503 181.447 225.627L175.083 231.991C171.959 235.116 171.959 240.181 175.083 243.305L181.447 249.669Z"/></mask><path d="M181.447 249.669C184.571 252.793 189.785 252.816 191.768 248.868C192.039 248.327 192.291 247.776 192.523 247.215C193.78 244.182 194.426 240.931 194.426 237.648C194.426 234.365 193.78 231.114 192.523 228.081C192.291 227.521 192.039 226.969 191.768 226.429C189.785 222.48 184.571 222.503 181.447 225.627L175.083 231.991C171.959 235.116 171.959 240.181 175.083 243.305L181.447 249.669Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-dr)"/></g>
+                            <g id="DDown"><mask id="m-dd" fill="white"><path d="M154.113 253.447C150.989 256.571 150.966 261.785 154.914 263.767C155.455 264.039 156.006 264.291 156.566 264.523C159.6 265.78 162.85 266.426 166.134 266.426C169.417 266.426 172.667 265.78 175.701 264.523C176.261 264.291 176.812 264.039 177.353 263.767C181.301 261.785 181.279 256.571 178.154 253.447L171.79 247.083C168.666 243.959 163.601 243.959 160.477 247.083L154.113 253.447Z"/></mask><path d="M154.113 253.447C150.989 256.571 150.966 261.785 154.914 263.767C155.455 264.039 156.006 264.291 156.566 264.523C159.6 265.78 162.85 266.426 166.134 266.426C169.417 266.426 172.667 265.78 175.701 264.523C176.261 264.291 176.812 264.039 177.353 263.767C181.301 261.785 181.279 256.571 178.154 253.447L171.79 247.083C168.666 243.959 163.601 243.959 160.477 247.083L154.113 253.447Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-dd)"/></g>
+                            <g id="DLeft"><mask id="m-dl" fill="white"><path d="M150.335 226.113C147.21 222.989 141.997 222.966 140.014 226.914C139.743 227.455 139.491 228.006 139.258 228.566C138.002 231.6 137.355 234.85 137.355 238.134C137.355 241.417 138.002 244.667 139.258 247.701C139.491 248.261 139.743 248.812 140.014 249.353C141.997 253.301 147.21 253.279 150.335 250.154L156.698 243.79C159.823 240.666 159.823 235.601 156.698 232.477L150.335 226.113Z"/></mask><path d="M150.335 226.113C147.21 222.989 141.997 222.966 140.014 226.914C139.743 227.455 139.491 228.006 139.258 228.566C138.002 231.6 137.355 234.85 137.355 238.134C137.355 241.417 138.002 244.667 139.258 247.701C139.491 248.261 139.743 248.812 140.014 249.353C141.997 253.301 147.21 253.279 150.335 250.154L156.698 243.79C159.823 240.666 159.823 235.601 156.698 232.477L150.335 226.113Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-dl)"/></g>
+                            <g id="BTop"><mask id="m-y" fill="white"><path d="M340.669 144.335C343.793 141.21 343.816 135.997 339.868 134.014C339.327 133.743 338.776 133.491 338.215 133.258C335.182 132.002 331.931 131.355 328.648 131.355C325.365 131.355 322.114 132.002 319.081 133.258C318.521 133.491 317.969 133.743 317.429 134.014C313.48 135.997 313.503 141.21 316.627 144.335L322.991 150.698C326.116 153.823 331.181 153.823 334.305 150.698L340.669 144.335Z"/></mask><path d="M340.669 144.335C343.793 141.21 343.816 135.997 339.868 134.014C339.327 133.743 338.776 133.491 338.215 133.258C335.182 132.002 331.931 131.355 328.648 131.355C325.365 131.355 322.114 132.002 319.081 133.258C318.521 133.491 317.969 133.743 317.429 134.014C313.48 135.997 313.503 141.21 316.627 144.335L322.991 150.698C326.116 153.823 331.181 153.823 334.305 150.698L340.669 144.335Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-y)"/></g>
+                            <g id="BRight"><mask id="m-b" fill="white"><path d="M344.447 171.669C347.571 174.793 352.785 174.816 354.768 170.868C355.039 170.327 355.291 169.776 355.523 169.215C356.78 166.182 357.426 162.931 357.426 159.648C357.426 156.365 356.78 153.114 355.523 150.081C355.291 149.521 355.039 148.969 354.768 148.429C352.785 144.48 347.571 144.503 344.447 147.627L338.083 153.991C334.959 157.116 334.959 162.181 338.083 165.305L344.447 171.669Z"/></mask><path d="M344.447 171.669C347.571 174.793 352.785 174.816 354.768 170.868C355.039 170.327 355.291 169.776 355.523 169.215C356.78 166.182 357.426 162.931 357.426 159.648C357.426 156.365 356.78 153.114 355.523 150.081C355.291 149.521 355.039 148.969 354.768 148.429C352.785 144.48 347.571 144.503 344.447 147.627L338.083 153.991C334.959 157.116 334.959 162.181 338.083 165.305L344.447 171.669Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-b)"/></g>
+                            <g id="BBottom"><mask id="m-a" fill="white"><path d="M317.113 175.447C313.989 178.571 313.966 183.785 317.914 185.767C318.455 186.039 319.006 186.291 319.566 186.523C322.6 187.78 325.85 188.426 329.134 188.426C332.417 188.426 335.667 187.78 338.701 186.523C339.261 186.291 339.812 186.039 340.353 185.767C344.301 183.785 344.279 178.571 341.154 175.447L334.79 169.083C331.666 165.959 326.601 165.959 323.477 169.083L317.113 175.447Z"/></mask><path d="M317.113 175.447C313.989 178.571 313.966 183.785 317.914 185.767C318.455 186.039 319.006 186.291 319.566 186.523C322.6 187.78 325.85 188.426 329.134 188.426C332.417 188.426 335.667 187.78 338.701 186.523C339.261 186.291 339.812 186.039 340.353 185.767C344.301 183.785 344.279 178.571 341.154 175.447L334.79 169.083C331.666 165.959 326.601 165.959 323.477 169.083L317.113 175.447Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-a)"/></g>
+                            <g id="BLeft"><mask id="m-x" fill="white"><path d="M313.335 148.113C310.21 144.989 304.997 144.966 303.014 148.914C302.743 149.455 302.491 150.006 302.258 150.566C301.002 153.6 300.355 156.851 300.355 160.134C300.355 163.417 301.002 166.668 302.258 169.701C302.491 170.261 302.743 170.812 303.014 171.353C304.997 175.301 310.21 175.279 313.335 172.154L319.698 165.79C322.823 162.666 322.823 157.601 319.698 154.477L313.335 148.113Z"/></mask><path d="M313.335 148.113C310.21 144.989 304.997 144.966 303.014 148.914C302.743 149.455 302.491 150.006 302.258 150.566C301.002 153.6 300.355 156.851 300.355 160.134C300.355 163.417 301.002 166.668 302.258 169.701C302.491 170.261 302.743 170.812 303.014 171.353C304.997 175.301 310.21 175.279 313.335 172.154L319.698 165.79C322.823 162.666 322.823 157.601 319.698 154.477L313.335 148.113Z" fill="rgba(0,0,0,0)" stroke="#888" stroke-width="5" mask="url(#m-x)"/></g>
+                            <g id="LMeta"><circle cx="185" cy="162" r="10" fill="rgba(0,0,0,0)" stroke="#aaa" stroke-width="2"/></g>
+                            <g id="RMeta"><circle cx="259" cy="162" r="10" fill="rgba(0,0,0,0)" stroke="#aaa" stroke-width="2"/></g>
+                            <g id="GuideBtn"><circle cx="222" cy="146" r="7" fill="rgba(0,0,0,0)" stroke="#aaa" stroke-width="2"/></g>
+                            <rect id="L1" x="111.5" y="61.5" width="41" height="13" rx="6.5" fill="rgba(0,0,0,0)" stroke="#aaa" stroke-width="2"/>
+                            <rect id="R1" x="289.5" y="61.5" width="41" height="13" rx="6.5" fill="rgba(0,0,0,0)" stroke="#aaa" stroke-width="2"/>
+                            <path id="L2" d="M152.5 37C152.5 41.1421 149.142 44.5 145 44.5H132C127.858 44.5 124.5 41.1421 124.5 37V16.5C124.5 8.76801 130.768 2.5 138.5 2.5C146.232 2.5 152.5 8.76801 152.5 16.5V37Z" fill="rgba(0,0,0,0)" stroke="#aaa" stroke-width="2"/>
+                            <path id="R2" d="M317.5 37C317.5 41.1421 314.142 44.5 310 44.5H297C292.858 44.5 289.5 41.1421 289.5 37V16.5C289.5 8.76801 295.768 2.5 303.5 2.5C311.232 2.5 317.5 8.76801 317.5 16.5V37Z" fill="rgba(0,0,0,0)" stroke="#aaa" stroke-width="2"/>
+                        </g>
+                    </svg>
+                </div>
             </div>
-            <div>
-                <h1 class="font-display text-lg font-extrabold tracking-tight leading-none">GAMEPAD TESTER</h1>
-                <p class="text-[10px] text-gray-400 mt-0.5 tracking-wider">TESTE COMPLETO DO SEU CONTROLE</p>
+            <div class="side-stack">
+                <div class="card">
+                    <div class="card-h"><span class="card-l">Analógicos</span></div>
+                    <div class="card-b">
+                        <div style="margin-bottom:10px">
+                            <p class="metric-label">Esquerdo</p>
+                            <div class="metric-row"><span>X <b id="lx">0.00</b></span><span>Y <b id="ly">0.00</b></span></div>
+                        </div>
+                        <div>
+                            <p class="metric-label">Direito</p>
+                            <div class="metric-row"><span>X <b id="rx">0.00</b></span><span>Y <b id="ry">0.00</b></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-h"><span class="card-l">Gatilhos</span></div>
+                    <div class="card-b">
+                        <div class="trig-wrap"><div class="trig-info"><span class="n">LT</span><span class="v" id="lt-t">0%</span></div><div class="trig-track"><div class="trig-fill" id="lt-b"></div></div></div>
+                        <div class="trig-wrap"><div class="trig-info"><span class="n">RT</span><span class="v" id="rt-t">0%</span></div><div class="trig-track"><div class="trig-fill" id="rt-b"></div></div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-h"><span class="card-l">Vibração</span></div>
+                    <div class="card-b">
+                        <div class="vib-sw"><input type="range" id="vrange" min="0" max="100" value="70"><span class="vib-val" id="vlbl">70%</span></div>
+                        <div class="btn-row"><button class="btn btn-p" id="vp">Pulso</button><button class="btn btn-g" id="v1">1 s</button><button class="btn btn-g btn-sm" id="vs">■</button></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-h"><span class="card-l">Eventos</span><button class="btn btn-g btn-sm" id="clr" style="padding:3px 8px;font-size:9px">Limpar</button></div>
+                    <div class="card-b"><div class="ev-log" id="log"><span class="ph">Aguardando eventos…</span></div></div>
+                </div>
             </div>
         </div>
-        <div id="status" class="flex items-center gap-2 text-sm">
-            <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 shrink-0"></span>
-            <span id="status-text" class="text-gray-400 text-xs">Procurando…</span>
+    </section>
+</div>
+
+<!-- ANALOG TEST -->
+<div class="container" id="analog">
+    <section class="fade-up">
+        <h2 class="section-title">Teste de Saúde dos Analógicos</h2>
+        <p class="section-sub">Mova os sticks para as extremidades e solte. O teste detecta drift, mede circularidade e avalia a saúde geral de cada analógico.</p>
+        <div class="analog-test-grid">
+            <!-- LEFT STICK TEST -->
+            <div class="card">
+                <div class="card-h"><span class="card-l">Stick Esquerdo</span><span id="healthL" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-dim)">—</span></div>
+                <div class="card-b" style="text-align:center">
+                    <div class="stick-canvas-wrap"><canvas id="canvasL" class="stick-canvas" width="480" height="480"></canvas></div>
+                    <div class="stick-info">
+                        <div><span class="label">Drift</span> <span class="val" id="driftL">—</span></div>
+                        <div class="health-bar"><div class="health-fill" id="hbarL" style="width:0%;background:#d1d5db"></div></div>
+                        <div><span class="label">Circularidade</span> <span class="val" id="circL">—</span></div>
+                        <div class="health-bar"><div class="health-fill" id="cbarL" style="width:0%;background:#d1d5db"></div></div>
+                        <div><span class="label">Amostras</span> <span class="val" id="sampL">0</span></div>
+                    </div>
+                </div>
+            </div>
+            <!-- RIGHT STICK TEST -->
+            <div class="card">
+                <div class="card-h"><span class="card-l">Stick Direito</span><span id="healthR" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-dim)">—</span></div>
+                <div class="card-b" style="text-align:center">
+                    <div class="stick-canvas-wrap"><canvas id="canvasR" class="stick-canvas" width="480" height="480"></canvas></div>
+                    <div class="stick-info">
+                        <div><span class="label">Drift</span> <span class="val" id="driftR">—</span></div>
+                        <div class="health-bar"><div class="health-fill" id="hbarR" style="width:0%;background:#d1d5db"></div></div>
+                        <div><span class="label">Circularidade</span> <span class="val" id="circR">—</span></div>
+                        <div class="health-bar"><div class="health-fill" id="cbarR" style="width:0%;background:#d1d5db"></div></div>
+                        <div><span class="label">Amostras</span> <span class="val" id="sampR">0</span></div>
+                    </div>
+                    <div class="test-controls" style="margin-top:16px">
+                        <button class="btn btn-g btn-sm" id="resetTest">Resetar Teste</button>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
+</div>
+
+<!-- FAQ -->
+<div class="container" id="faq">
+    <section class="fade-up">
+        <h2 class="section-title">Perguntas Frequentes</h2>
+        <p class="section-sub">Dúvidas comuns sobre o tester.</p>
+        <div class="faq-list" id="faqList"></div>
+    </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container">
+        <p>Gamepad Tester &middot; Xinput / Dinput &middot; USB / Bluetooth &middot; &copy; 2013–2026 &middot; v2.0.0</p>
+        <p style="margin-top:6px"><a href="#" id="fPriv">Privacidade</a> &middot; <a href="#">Contato</a></p>
     </div>
-</header>
-
-<!-- Main -->
-<main class="max-w-6xl mx-auto px-4 py-5">
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
-
-        <!-- Canvas 3/5 -->
-        <div class="lg:col-span-3">
-            <div class="canvas-wrap" style="aspect-ratio:16/10">
-                <canvas id="cv"></canvas>
-                <div id="overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-[#fafafa] z-10">
-                    <div class="float-anim text-6xl mb-5 select-none">🎮</div>
-                    <p class="font-display text-xl font-bold text-gray-800">Conecte seu controle</p>
-                    <p class="text-xs text-gray-400 mt-2">Aperte qualquer botão para começar</p>
-                    <p class="text-[10px] text-gray-300 mt-6 max-w-xs text-center leading-relaxed">Funciona com controles Xbox, PlayStation, Gamesit e genéricos via USB ou Bluetooth. Use Chrome, Edge ou Firefox.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Panels 2/5 -->
-        <div class="lg:col-span-2 space-y-3" id="panels-side">
-
-            <!-- Buttons -->
-            <div class="panel">
-                <div class="panel-title">Botões</div>
-                <div id="btn-panel"></div>
-            </div>
-
-            <!-- Axes -->
-            <div class="panel">
-                <div class="panel-title">Analógicos</div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <div class="text-[10px] text-gray-400 mb-1">Esquerdo</div>
-                        <div class="flex gap-4 text-xs"><span>X <b id="lx">0.00</b></span><span>Y <b id="ly">0.00</b></span></div>
-                    </div>
-                    <div>
-                        <div class="text-[10px] text-gray-400 mb-1">Direito</div>
-                        <div class="flex gap-4 text-xs"><span>X <b id="rx">0.00</b></span><span>Y <b id="ry">0.00</b></span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Triggers -->
-            <div class="panel">
-                <div class="panel-title">Gatilhos</div>
-                <div class="space-y-2.5">
-                    <div>
-                        <div class="flex justify-between text-[10px] mb-1"><span class="text-gray-400">LT</span><b id="lt-pct">0 %</b></div>
-                        <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden"><div id="lt-bar" class="h-full bg-black rounded-full transition-all duration-75" style="width:0"></div></div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-[10px] mb-1"><span class="text-gray-400">RT</span><b id="rt-pct">0 %</b></div>
-                        <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden"><div id="rt-bar" class="h-full bg-black rounded-full transition-all duration-75" style="width:0"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vibration -->
-            <div class="panel">
-                <div class="panel-title">Vibração</div>
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-[10px] text-gray-400 w-10">Força</span>
-                    <input type="range" id="vib-range" min="0" max="100" value="70" class="flex-1">
-                    <span id="vib-lbl" class="text-[11px] font-bold w-9 text-right">70 %</span>
-                </div>
-                <div class="flex gap-2">
-                    <button id="btn-pulse"   class="flex-1 bg-black text-white text-[11px] font-bold py-2 rounded-lg hover:bg-gray-800 transition cursor-pointer">Pulso</button>
-                    <button id="btn-1s"      class="flex-1 bg-gray-800 text-white text-[11px] font-bold py-2 rounded-lg hover:bg-gray-700 transition cursor-pointer">1 s</button>
-                    <button id="btn-stop"    class="bg-red-500 text-white text-[11px] font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition cursor-pointer">■</button>
-                </div>
-            </div>
-
-            <!-- Info -->
-            <div class="panel">
-                <div class="panel-title">Informações</div>
-                <div id="info-id" class="text-[11px] text-gray-500 break-all leading-relaxed">Nenhum controlador conectado</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Log -->
-    <div class="panel mt-5">
-        <div class="flex items-center justify-between mb-2">
-            <div class="panel-title mb-0">Log de Eventos</div>
-            <button id="btn-clr-log" class="text-[10px] text-gray-400 hover:text-gray-600 cursor-pointer">Limpar</button>
-        </div>
-        <div id="log" class="text-[11px] text-gray-500 h-28 overflow-y-auto space-y-px"><div class="text-gray-300 italic">Aguardando eventos…</div></div>
-    </div>
-
-    <!-- Bottom Ad -->
-    <div class="mt-5 bg-gray-50 rounded-xl border border-gray-100 h-[250px] flex items-center justify-center text-gray-300 text-xs tracking-wider">PUBLICIDADE 970×250</div>
-</main>
-
-<footer class="border-t border-gray-100 mt-8 py-5 text-center text-[10px] text-gray-300 tracking-wider">
-    GAMEPAD TESTER &mdash; Use um controle compatível (Xinput / Dinput)
 </footer>
 
+<!-- PRIVACY MODAL -->
+<div class="modal-bg" id="privModal">
+    <div class="modal">
+        <div class="modal-h"><h2>Política de Privacidade</h2><button class="modal-x" id="closePriv">&times;</button></div>
+        <div class="modal-body">
+            <h3>Sobre</h3><p>O Gamepad Tester opera o presente site, que fornece o Serviço de teste de controles via navegador. Ao utilizar nosso Serviço, você concorda com a coleta e uso de informações de acordo com esta política.</p>
+            <h3>Coleta</h3><p>Podemos coletar informações identificáveis como nome, telefone e endereço para contato ou identificação.</p>
+            <h3>Dados de Log</h3><p>Coletamos informações do navegador como IP, versão, páginas visitadas, data e hora.</p>
+            <h3>Cookies</h3><p>Usamos cookies para melhorar o Serviço. Você pode recusá-los, mas partes do Serviço podem não funcionar.</p>
+            <h3>Provedores</h3><p>Terceiros podem ter acesso às suas informações apenas para realizar tarefas em nosso nome.</p>
+            <h3>Segurança</h3><p>Usamos meios comercialmente aceitáveis de proteção, mas nenhum método é 100% seguro.</p>
+            <h3>Links Externos</h3><p>Não nos responsabilizamos por sites de terceiros.</p>
+            <h3>Crianças</h3><p>Não coletamos informações de menores de 13 anos.</p>
+            <h3>Alterações</h3><p>Podemos atualizar esta Política periodicamente.</p>
+            <h3>Contato</h3><p>Dúvidas? Entre em contato conosco.</p>
+        </div>
+    </div>
+</div>
+
 <script>
-class GamepadTester {
-    static NAMES = {0:'A',1:'B',2:'X',3:'Y',4:'LB',5:'RB',6:'LT',7:'RT',8:'Back',9:'Start',10:'L3',11:'R3',12:'D↑',13:'D↓',14:'D←',15:'D→',16:'Guide'};
-    static COLORS = {0:'#22c55e',1:'#ef4444',2:'#3b82f6',3:'#eab308'};
-    static GROUPS = [
-        {label:'Face',  ids:[0,1,2,3]},
-        {label:'Ombros',ids:[4,5]},
-        {label:'Centro',ids:[8,16,9]},
-        {label:'D-Pad', ids:[12,13,14,15]},
-        {label:'Sticks',ids:[10,11]},
-    ];
+/* FAQ DATA */
+const FAQ=[
+{q:'Por que meu gamepad não aparece?',a:'A Gamepad API é inconsistente entre navegadores e SOs. Verifique:<br>&bull; Dispositivo plugado ou conectado via Bluetooth<br>&bull; Pressione botões para acordar a API<br>&bull; Feche outros apps usando o gamepad<br>&bull; Reinicie o navegador'},
+{q:'Que informações são exibidas?',a:'Múltiplos gamepads conectados e seu estado atual:<br>&bull; <b>Timestamp:</b> última atualização<br>&bull; <b>Axis [N]:</b> posição das entradas analógicas<br>&bull; <b>B [N]:</b> estado dos botões'},
+{q:'A vibração funciona?',a:'Vibração é suportada em todos os navegadores modernos exceto Safari.'},
+{q:'O que o teste de analógicos mede?',a:'<b>Drift:</b> desvio do centro quando o stick é solto. Valores altos indicam drift.<br><b>Circularidade:</b> se o stick alcança toda a área útil. Valores baixos indicam deadzone excessiva ou range limitado.'},
+{q:'Por que os valores estão estranhos?',a:'Nem todos os controles são reportados da mesma forma. Este site exibe o que a Gamepad API retorna.'},
+{q:'O que é circularidade?',a:'Mede se as coordenadas dos analógicos em deflexão máxima ficam dentro de um círculo de raio 1. Fora disso indica imprecisão.'}
+];
 
-    constructor(){
-        this.cv  = document.getElementById('cv');
-        this.ctx = this.cv.getContext('2d');
-        this.connected = false;
-        this.gp = null;
-        this.prev = {};
-        this.btns = [];
-        this.axes = [0,0,0,0];
-        this.cw = 0; this.ch = 0; this.dpr = 1;
-        this.buildPanel();
-        this.bind();
-        this.resize();
-        this.loop();
+/* BUILD FAQ */
+(function(){const l=document.getElementById('faqList');FAQ.forEach(i=>{const d=document.createElement('div');d.className='faq-item';d.innerHTML=`<button class="faq-q" onclick="togFaq(this)"><span>${i.q}</span><svg class="faq-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a"><div class="faq-ai">${i.a}</div></div>`;l.appendChild(d)})})();
+function togFaq(b){const i=b.parentElement,a=i.querySelector('.faq-a');if(i.classList.contains('open')){a.style.maxHeight='0';i.classList.remove('open')}else{a.style.maxHeight=a.scrollHeight+'px';i.classList.add('open')}}
+
+/* PRIVACY */
+const pM=document.getElementById('privModal');
+document.getElementById('openPriv').onclick=e=>{e.preventDefault();pM.classList.add('vis')};
+document.getElementById('fPriv').onclick=e=>{e.preventDefault();pM.classList.add('vis')};
+document.getElementById('closePriv').onclick=()=>pM.classList.remove('vis');
+pM.onclick=e=>{if(e.target===pM)pM.classList.remove('vis')};
+
+/* ─── GAMEPAD ENGINE ─── */
+const STICK={l:{x:113,y:160},r:{x:278,y:238}},RANGE=8,DZ=0.08;
+const NAMES={0:'A',1:'B',2:'X',3:'Y',4:'LB',5:'RB',6:'LT',7:'RT',8:'Back',9:'Start',10:'L3',11:'R3',12:'D↑',13:'D↓',14:'D←',15:'D→',16:'Guide'};
+const SVG_ID={0:'BBottom',1:'BRight',2:'BLeft',3:'BTop',4:'L1',5:'R1',8:'LMeta',9:'RMeta',12:'DUp',13:'DDown',14:'DLeft',15:'DRight',16:'GuideBtn'};
+const $=id=>document.getElementById(id);
+
+/* ─── ANALOG HEALTH TEST ─── */
+class StickTest{
+    constructor(canvasId,driftId,circId,hbarId,cbarId,sampId,healthId){
+        this.canvas=$(canvasId);this.ctx=this.canvas.getContext('2d');
+        this.driftEl=$(driftId);this.circEl=$(circId);
+        this.hbar=$(hbarId);this.cbar=$(cbarId);
+        this.sampEl=$(sampId);this.healthEl=$(healthId);
+        this.points=[];this.driftSamples=[];this.maxDriftSamples=60;
+        this.w=this.canvas.width;this.h=this.canvas.height;
+        this.cx=this.w/2;this.cy=this.h/2;this.r=Math.min(this.w,this.h)/2-20;
+        this.drawBase();
     }
 
-    /* ── UI build ── */
-    buildPanel(){
-        const p = document.getElementById('btn-panel');
-        GamepadTester.GROUPS.forEach(g=>{
-            const s = document.createElement('div');
-            s.className = 'mb-2.5';
-            s.innerHTML = `<div class="text-[10px] text-gray-400 mb-1">${g.label}</div><div class="flex flex-wrap gap-1.5">${g.ids.map(i=>`<div class="btn-pill" id="bp${i}">${GamepadTester.NAMES[i]||'B'+i}</div>`).join('')}</div>`;
-            p.appendChild(s);
-        });
-    }
-
-    /* ── Events ── */
-    bind(){
-        window.addEventListener('gamepadconnected',e=>{this.onConnect(e.gamepad)});
-        window.addEventListener('gamepaddisconnected',()=>{this.onDisconnect()});
-        window.addEventListener('resize',()=>this.resize());
-        new ResizeObserver(()=>this.resize()).observe(this.cv.parentElement);
-        document.getElementById('vib-range').addEventListener('input',e=>{
-            document.getElementById('vib-lbl').textContent=e.target.value+' %';
-        });
-        document.getElementById('btn-pulse').addEventListener('click',()=>this.vibrate(200));
-        document.getElementById('btn-1s').addEventListener('click',()=>this.vibrate(1000));
-        document.getElementById('btn-stop').addEventListener('click',()=>this.stopVib());
-        document.getElementById('btn-clr-log').addEventListener('click',()=>{
-            document.getElementById('log').innerHTML='<div class="text-gray-300 italic">Log limpo</div>';
-        });
-    }
-
-    onConnect(gp){
-        this.connected=true; this.gp=gp;
-        this.setStatus(true);
-        this.log('Conectado: '+gp.id);
-        document.getElementById('overlay').style.display='none';
-        document.getElementById('info-id').textContent=gp.id;
-    }
-    onDisconnect(){
-        this.connected=false; this.gp=null; this.btns=[]; this.axes=[0,0,0,0];
-        this.setStatus(false);
-        this.log('Controlador desconectado');
-        document.getElementById('overlay').style.display='flex';
-        document.getElementById('info-id').textContent='Nenhum controlador conectado';
-    }
-    setStatus(ok){
-        const d=document.getElementById('status-dot'),t=document.getElementById('status-text');
-        d.className='w-2.5 h-2.5 rounded-full shrink-0 '+(ok?'bg-emerald-500 pulse-dot':'bg-gray-300');
-        t.className='text-xs '+(ok?'text-emerald-600 font-medium':'text-gray-400');
-        t.textContent=ok?'Conectado':'Desconectado';
-    }
-
-    /* ── Polling ── */
-    poll(){
-        const gps=navigator.getGamepads();
-        let f=null;
-        for(const g of gps)if(g){f=g;break;}
-        if(f){
-            if(!this.connected)this.onConnect(f);
-            this.gp=f;
-            f.buttons.forEach((b,i)=>{
-                const was=!!this.prev[i], now=b.pressed;
-                this.btns[i]={pressed:now,value:b.value};
-                if(now&&!was)this.log('Pressionado: '+(GamepadTester.NAMES[i]||'Btn'+i));
-                this.prev[i]=now;
-            });
-            for(let i=0;i<Math.min(f.axes.length,4);i++)this.axes[i]=f.axes[i];
-        }else if(this.connected)this.onDisconnect();
-    }
-
-    /* ── Loop ── */
-    loop(){this.poll();this.draw();this.updateUI();requestAnimationFrame(()=>this.loop());}
-
-    /* ── Resize ── */
-    resize(){
-        const r=this.cv.parentElement.getBoundingClientRect();
-        this.dpr=window.devicePixelRatio||1;
-        this.cw=r.width; this.ch=r.height;
-        this.cv.width=r.width*this.dpr;
-        this.cv.height=r.height*this.dpr;
-        this.cv.style.width=r.width+'px';
-        this.cv.style.height=r.height+'px';
-        this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);
-    }
-
-    /* ── UI updates ── */
-    updateUI(){
-        for(let i=0;i<17;i++){
-            const el=document.getElementById('bp'+i);
-            if(!el)continue;
-            const on=this.btns[i]?.pressed;
-            const c=GamepadTester.COLORS[i];
-            if(on){
-                el.style.background=c||'#111'; el.style.borderColor=c||'#111';
-                el.style.color='#fff'; el.classList.add('on');
-            }else{
-                el.style.background='#fff'; el.style.borderColor='#e5e7eb';
-                el.style.color='#9ca3af'; el.classList.remove('on');
-            }
+    drawBase(){
+        const{ctx,cx,cy,r,w,h}=this;
+        ctx.clearRect(0,0,w,h);
+        // Grid
+        ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+        // Bounding circle
+        ctx.strokeStyle='#d1d5db';ctx.lineWidth=2;ctx.setLineDash([4,4]);
+        ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+        // Center dot
+        ctx.fillStyle='#d1d5db';ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fill();
+        // Trail
+        if(this.points.length>1){
+            ctx.strokeStyle='rgba(17,24,39,0.08)';ctx.lineWidth=1.5;
+            ctx.beginPath();ctx.moveTo(cx+this.points[0][0]*r,cy-this.points[0][1]*r);
+            for(let i=1;i<this.points.length;i++)ctx.lineTo(cx+this.points[i][0]*r,cy-this.points[i][1]*r);
+            ctx.stroke();
         }
-        const dz=v=>Math.abs(v)<.08?0:v;
-        document.getElementById('lx').textContent=dz(this.axes[0]).toFixed(2);
-        document.getElementById('ly').textContent=dz(this.axes[1]).toFixed(2);
-        document.getElementById('rx').textContent=dz(this.axes[2]).toFixed(2);
-        document.getElementById('ry').textContent=dz(this.axes[3]).toFixed(2);
-        const lt=this.btns[6]?.value||0, rt=this.btns[7]?.value||0;
-        document.getElementById('lt-bar').style.width=(lt*100)+'%';
-        document.getElementById('rt-bar').style.width=(rt*100)+'%';
-        document.getElementById('lt-pct').textContent=Math.round(lt*100)+' %';
-        document.getElementById('rt-pct').textContent=Math.round(rt*100)+' %';
     }
 
-    /* ── Vibration ── */
-    vibrate(ms){
-        if(!this.gp)return;
-        const a=this.gp.vibrationActuator;
-        if(!a){this.log('Vibração não suportada');return;}
-        const s=+document.getElementById('vib-range').value/100;
-        a.playEffect('dual-rumble',{startDelay:0,duration:ms,weakMagnitude:s,strongMagnitude:s})
-         .then(()=>this.log(`Vibração ${Math.round(s*100)}% — ${ms}ms`))
-         .catch(e=>this.log('Erro: '+e.message));
+    drawCurrent(x,y,isMoving){
+        const{ctx,cx,cy,r}=this;
+        this.drawBase();
+        // Outer ring for boundary detection
+        const dist=Math.sqrt(x*x+y*y);
+        if(dist>0.95){
+            ctx.strokeStyle='rgba(239,68,68,0.15)';ctx.lineWidth=r*0.06;
+            ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+        }
+        // Current position
+        const px=cx+x*r,py=cy-y*r;
+        if(isMoving){
+            ctx.fillStyle='rgba(17,24,39,0.06)';ctx.beginPath();ctx.arc(px,py,16,0,Math.PI*2);ctx.fill();
+        }
+        ctx.fillStyle='#111827';ctx.beginPath();ctx.arc(px,py,8,0,Math.PI*2);ctx.fill();
     }
-    stopVib(){
+
+    update(x,y){
+        const isMoving=Math.abs(x)>DZ||Math.abs(y)>DZ;
+        if(isMoving)this.points.push([x,y]);
+        // Collect drift samples when near center
+        if(Math.abs(x)<0.15&&Math.abs(y)<0.15){
+            this.driftSamples.push({x,y});
+            if(this.driftSamples.length>this.maxDriftSamples)this.driftSamples.shift();
+        }
+        this.drawCurrent(x,y,isMoving);
+        this.calcMetrics();
+    }
+
+    calcMetrics(){
+        const n=this.points.length;
+        this.sampEl.textContent=n;
+
+        // Drift
+        if(this.driftSamples.length>=10){
+            const avgX=this.driftSamples.reduce((s,p)=>s+p.x,0)/this.driftSamples.length;
+            const avgY=this.driftSamples.reduce((s,p)=>s+p.y,0)/this.driftSamples.length;
+            const drift=Math.sqrt(avgX*avgX+avgY*avgY);
+            const driftPct=Math.min(drift*100/0.15,100);
+            this.driftEl.textContent=(drift*100).toFixed(2)+'%';
+            this.driftEl.className='val'+(drift>0.05?' bad':' ok');
+            this.hbar.style.width=Math.min(driftPct,100)+'%';
+            this.hbar.style.background=drift>0.05?'#ef4444':'#10b981';
+            // Health label
+            if(drift>0.08)this.healthEl.textContent='DRIFT DETECTADO';
+            else if(drift>0.03)this.healthEl.textContent='LEVE DRIFT';
+            else this.healthEl.textContent='SAUDÁVEL';
+            this.healthEl.style.color=drift>0.08?'#ef4444':drift>0.03?'#f59e0b':'#10b981';
+        }else{
+            this.driftEl.textContent='Aguardando…';
+            this.driftEl.className='val';
+        }
+
+        // Circularity
+        if(n>=20){
+            let maxR=0;
+            for(const[px,py]of this.points){const d=Math.sqrt(px*px+py*py);if(d>maxR)maxR=d}
+            const circ=Math.min(maxR,1.0);
+            const circPct=circ*100;
+            this.circEl.textContent=circPct.toFixed(1)+'%';
+            this.circEl.className='val'+(circPct<80?' bad':' ok');
+            this.cbar.style.width=Math.min(circPct,100)+'%';
+            this.cbar.style.background=circPct<80?'#ef4444':'#10b981';
+        }else{
+            this.circEl.textContent='Mova o stick…';
+            this.circEl.className='val';
+        }
+    }
+
+    reset(){
+        this.points=[];this.driftSamples=[];
+        this.driftEl.textContent='—';this.driftEl.className='val';
+        this.circEl.textContent='—';this.circEl.className='val';
+        this.hbar.style.width='0%';this.hbar.style.background='#d1d5db';
+        this.cbar.style.width='0%';this.cbar.style.background='#d1d5db';
+        this.sampEl.textContent='0';
+        this.healthEl.textContent='—';this.healthEl.style.color='var(--text-dim)';
+        this.drawBase();
+    }
+}
+
+/* ─── MAIN GAMEPAD UI ─── */
+class GamepadUI{
+    constructor(){
+        this.on=false;this.gp=null;this.prev={};this.axes=[0,0,0,0];this.vis={};
+        for(const[k,id]of Object.entries(SVG_ID)){const el=$(id);if(!el)continue;this.vis[k]=el.children.length>1?el.children[1]:el.children.length>0?el.children[0]:el}
+        this.lsR=$('LeftStick');this.lsD=$('LStickDot');this.rsR=$('RightStick');this.rsD=$('RStickDot');
+        this.ltF=$('L2');this.rtF=$('R2');
+        this.stickL=new StickTest('canvasL','driftL','circL','hbarL','cbarL','sampL','healthL');
+        this.stickR=new StickTest('canvasR','driftR','circR','hbarR','cbarR','sampR','healthR');
+        this.bind();this.loop();
+    }
+
+    bind(){
+        window.addEventListener('gamepadconnected',e=>this.connect(e.gamepad));
+        window.addEventListener('gamepaddisconnected',()=>this.disconnect());
+        $('vrange').oninput=e=>{$('vlbl').textContent=e.target.value+'%'};
+        $('vp').onclick=()=>this.vib(250);
+        $('v1').onclick=()=>this.vib(1000);
+        $('vs').onclick=()=>this.vibStop();
+        $('clr').onclick=()=>{$('log').innerHTML='<span class="ph">Log limpo</span>'};
+        $('resetTest').onclick=()=>{this.stickL.reset();this.stickR.reset()};
+    }
+
+    connect(gp){
+        this.on=true;this.gp=gp;
+        $('navDot').classList.add('on');$('navSt').textContent='Conectado';$('navSt').style.color='var(--text)';
+        $('overlay').classList.add('hidden');$('gp').classList.add('active');
+        $('gpName').textContent=gp.id.length>45?gp.id.substring(0,42)+'...':gp.id;
+        this.log('Conectado: '+gp.id);
+    }
+
+    disconnect(){
+        this.on=false;this.gp=null;this.axes=[0,0,0,0];
+        $('navDot').classList.remove('on');$('navSt').textContent='Offline';$('navSt').style.color='';
+        $('overlay').classList.remove('hidden');$('gp').classList.remove('active');$('gpName').textContent='';
+        this.reset();this.log('Desconectado');
+    }
+
+    loop(){this.poll();this.draw();this.ui();requestAnimationFrame(()=>this.loop())}
+
+    poll(){
+        const pads=navigator.getGamepads?navigator.getGamepads():[];
+        let f=null;for(const p of pads)if(p){f=p;break}
+        if(f){
+            if(!this.on)this.connect(f);this.gp=f;
+            f.buttons.forEach((b,i)=>{const now=b.pressed;if(now&&!this.prev[i])this.log('Pressionado: '+(NAMES[i]||'Btn'+i));this.prev[i]=now});
+            for(let i=0;i<Math.min(f.axes.length,4);i++)this.axes[i]=f.axes[i];
+        }else if(this.on)this.disconnect();
+    }
+
+    draw(){
         if(!this.gp)return;
-        const a=this.gp.vibrationActuator;
+        const b=this.gp.buttons,dz=v=>Math.abs(v)<DZ?0:v;
+        for(let i=0;i<4;i++){const el=this.vis[i];if(!el)continue;const on=b[i].pressed;el.setAttribute('fill',on?'#111827':'rgba(0,0,0,0)');el.setAttribute('stroke',on?'#111827':'#888')}
+        [4,5].forEach(i=>{const el=this.vis[i];if(el)el.setAttribute('fill',b[i].pressed?'#999':'rgba(0,0,0,0)')});
+        if(this.ltF){const v=b[6]?.value??0;this.ltF.setAttribute('fill',v>.01?`rgba(17,24,39,${(v*.4).toFixed(2)})`:'rgba(0,0,0,0)')}
+        if(this.rtF){const v=b[7]?.value??0;this.rtF.setAttribute('fill',v>.01?`rgba(17,24,39,${(v*.4).toFixed(2)})`:'rgba(0,0,0,0)')}
+        [8,9].forEach(i=>{const el=this.vis[i];if(el)el.setAttribute('fill',b[i]?.pressed?'#aaa':'rgba(0,0,0,0)')});
+        const g=this.vis[16];if(g){const on=b[16]?.pressed;g.setAttribute('fill',on?'#111827':'rgba(0,0,0,0)');g.setAttribute('stroke',on?'#111827':'#aaa')}
+        for(let i=12;i<=15;i++){const el=this.vis[i];if(el)el.setAttribute('fill',b[i]?.pressed?'#111827':'rgba(0,0,0,0)')}
+        const lx=dz(this.axes[0]),ly=dz(this.axes[1]),rx=dz(this.axes[2]),ry=dz(this.axes[3]);
+        this.move(this.lsR,this.lsD,STICK.l,lx,ly,b[10]?.pressed);
+        this.move(this.rsR,this.rsD,STICK.r,rx,ry,b[11]?.pressed);
+        // Update analog health test
+        this.stickL.update(this.axes[0],this.axes[1]);
+        this.stickR.update(this.axes[2],this.axes[3]);
+    }
+
+    move(ring,dot,base,x,y,pressed){
+        if(!ring||!dot)return;
+        const cx=base.x+x*RANGE,cy=base.y+y*RANGE;
+        ring.setAttribute('cx',cx);ring.setAttribute('cy',cy);
+        dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);
+        ring.setAttribute('fill',pressed?'rgba(17,24,39,0.08)':'rgba(0,0,0,0)');
+        const moved=Math.abs(x)>DZ||Math.abs(y)>DZ;
+        dot.setAttribute('fill',moved?'#111827':'rgba(0,0,0,0)');
+        dot.setAttribute('stroke','rgba(0,0,0,0)');
+    }
+
+    reset(){
+        for(let i=0;i<4;i++){const el=this.vis[i];if(el){el.setAttribute('fill','rgba(0,0,0,0)');el.setAttribute('stroke','#888')}}
+        [4,5,8,9].forEach(i=>{const el=this.vis[i];if(el)el.setAttribute('fill','rgba(0,0,0,0)')});
+        for(let i=12;i<=15;i++){const el=this.vis[i];if(el)el.setAttribute('fill','rgba(0,0,0,0)')}
+        if(this.ltF)this.ltF.setAttribute('fill','rgba(0,0,0,0)');
+        if(this.rtF)this.rtF.setAttribute('fill','rgba(0,0,0,0)');
+        const g=this.vis[16];if(g){g.setAttribute('fill','rgba(0,0,0,0)');g.setAttribute('stroke','#aaa')}
+        this.move(this.lsR,this.lsD,STICK.l,0,0,false);
+        this.move(this.rsR,this.rsD,STICK.r,0,0,false);
+    }
+
+    ui(){
+        const dz=v=>Math.abs(v)<DZ?0:v;
+        $('lx').textContent=dz(this.axes[0]).toFixed(2);
+        $('ly').textContent=dz(this.axes[1]).toFixed(2);
+        $('rx').textContent=dz(this.axes[2]).toFixed(2);
+        $('ry').textContent=dz(this.axes[3]).toFixed(2);
+        const lt=this.gp?.buttons[6]?.value??0,rt=this.gp?.buttons[7]?.value??0;
+        $('lt-b').style.width=(lt*100)+'%';$('lt-t').textContent=Math.round(lt*100)+'%';
+        $('rt-b').style.width=(rt*100)+'%';$('rt-t').textContent=Math.round(rt*100)+'%';
+    }
+
+    vib(ms){
+        if(!this.gp)return;const a=this.gp.vibrationActuator;
+        if(!a){this.log('Vibração não suportada');return}
+        const s=+$('vrange').value/100;
+        a.playEffect('dual-rumble',{startDelay:0,duration:ms,weakMagnitude:s,strongMagnitude:s})
+         .then(()=>this.log(`Vibração ${Math.round(s*100)}% — ${ms}ms`)).catch(e=>this.log('Erro: '+e.message));
+    }
+
+    vibStop(){
+        if(!this.gp)return;const a=this.gp.vibrationActuator;
         if(a)a.playEffect('dual-rumble',{startDelay:0,duration:0,weakMagnitude:0,strongMagnitude:0});
         this.log('Vibração parada');
     }
 
-    /* ── Log ── */
     log(msg){
-        const el=document.getElementById('log');
-        const ph=el.querySelector('.italic'); if(ph)ph.remove();
+        const el=$('log'),ph=el.querySelector('.ph');if(ph)ph.remove();
         const d=document.createElement('div');
-        d.className='py-0.5 border-b border-gray-50 last:border-0';
-        d.innerHTML=`<span class="text-gray-300">[${new Date().toLocaleTimeString('pt-BR')}]</span> ${msg}`;
-        el.appendChild(d); el.scrollTop=el.scrollHeight;
-        while(el.children.length>120)el.removeChild(el.firstChild);
-    }
-
-    /* ══════════════════════════════════════════════════════════
-       CANVAS DRAWING
-       ══════════════════════════════════════════════════════════ */
-    draw(){
-        const c=this.ctx;
-        c.clearRect(0,0,this.cw,this.ch);
-        if(!this.connected)return;
-
-        const W=this.cw, H=this.ch;
-        const cx=W/2, cy=H/2+H*.06;
-        const s=Math.min(W/580,H/400);
-
-        this.body(c,cx,cy,s);
-        this.sticks(c,cx,cy,s);
-        this.face(c,cx,cy,s);
-        this.dpad(c,cx,cy,s);
-        this.bumpers(c,cx,cy,s);
-        this.triggers(c,cx,cy,s);
-        this.center(c,cx,cy,s);
-
-        c.fillStyle='#6b7280';
-        c.font=`${Math.round(10*s)}px 'Syne',sans-serif`;
-        c.textAlign='center'; c.textBaseline='middle';
-        c.fillText('Visualização ao Vivo',cx,cy-95*s);
-    }
-
-    /* rounded rect */
-    rr(c,x,y,w,h,r){
-        c.beginPath();
-        c.moveTo(x+r,y); c.lineTo(x+w-r,y);
-        c.quadraticCurveTo(x+w,y,x+w,y+r); c.lineTo(x+w,y+h-r);
-        c.quadraticCurveTo(x+w,y+h,x+w-r,y+h); c.lineTo(x+r,y+h);
-        c.quadraticCurveTo(x,y+h,x,y+h-r); c.lineTo(x,y+r);
-        c.quadraticCurveTo(x,y,x+r,y); c.closePath();
-    }
-
-    /* body */
-    body(c,cx,cy,s){
-        c.save();
-        c.shadowColor='rgba(0,0,0,.10)'; c.shadowBlur=30*s; c.shadowOffsetY=6*s;
-        this.rr(c,cx-175*s,cy-60*s,350*s,135*s,32*s);
-        const g=c.createLinearGradient(0,cy-60*s,0,cy+75*s);
-        g.addColorStop(0,'#272727'); g.addColorStop(1,'#1a1a1a');
-        c.fillStyle=g; c.fill();
-        c.restore();
-
-        /* grips */
-        c.save(); c.shadowColor='rgba(0,0,0,.06)'; c.shadowBlur=12*s; c.shadowOffsetY=4*s;
-        this.rr(c,cx-175*s,cy+38*s,58*s,72*s,18*s); c.fillStyle='#222'; c.fill();
-        this.rr(c,cx+117*s,cy+38*s,58*s,72*s,18*s); c.fillStyle='#222'; c.fill();
-        c.restore();
-
-        /* subtle top highlight */
-        c.save(); c.globalAlpha=.04;
-        this.rr(c,cx-170*s,cy-58*s,340*s,40*s,28*s); c.fillStyle='#fff'; c.fill();
-        c.restore();
-    }
-
-    /* single stick */
-    stick1(c,x,y,r,ax,ay,bi,s){
-        const vx=this.axes[ax]||0, vy=this.axes[ay]||0;
-        const dz=v=>Math.abs(v)<.08?0:v;
-        const ax2=dz(vx), ay2=dz(vy);
-        const pressed=this.btns[bi]?.pressed;
-
-        /* recess */
-        c.beginPath(); c.arc(x,y,r+5*s,0,Math.PI*2);
-        c.fillStyle='#131313'; c.fill();
-
-        /* crosshair */
-        c.save(); c.strokeStyle='#222'; c.lineWidth=1; c.setLineDash([3,4]);
-        c.beginPath(); c.moveTo(x-r,y); c.lineTo(x+r,y); c.moveTo(x,y-r); c.lineTo(x,y+r);
-        c.stroke(); c.setLineDash([]); c.restore();
-
-        /* position */
-        const px=x+ax2*(r-6*s), py=y+ay2*(r-6*s);
-        const sr=9*s;
-        const moved=Math.abs(ax2)>.08||Math.abs(ay2)>.08;
-
-        if(moved||pressed){c.save();c.shadowColor=pressed?'rgba(255,255,255,.25)':'rgba(255,255,255,.1)';c.shadowBlur=12*s;}
-
-        c.beginPath(); c.arc(px,py,sr,0,Math.PI*2);
-        const gr=c.createRadialGradient(px-2*s,py-2*s,0,px,py,sr);
-        if(pressed){gr.addColorStop(0,'#fff');gr.addColorStop(1,'#ccc');}
-        else{gr.addColorStop(0,'#4a4a4a');gr.addColorStop(1,'#2a2a2a');}
-        c.fillStyle=gr; c.fill();
-
-        if(moved||pressed) c.restore();
-
-        /* label */
-        c.fillStyle='#333'; c.font=`bold ${Math.round(7*s)}px 'JetBrains Mono',monospace`;
-        c.textAlign='center'; c.textBaseline='middle';
-        c.fillText(ax===0?'LS':'RS',x,y+r+12*s);
-    }
-
-    sticks(c,cx,cy,s){
-        this.stick1(c,cx-95*s,cy-10*s,28*s,0,1,10,s);
-        this.stick1(c,cx+50*s,cy+40*s,28*s,2,3,11,s);
-    }
-
-    face(c,cx,cy,s){
-        const bx=cx+115*s, by=cy-10*s, r=13*s, d=30*s;
-        [{i:0,dx:0,dy:1,c:'#22c55e',n:'A'},{i:1,dx:1,dy:0,c:'#ef4444',n:'B'},
-         {i:2,dx:-1,dy:0,c:'#3b82f6',n:'X'},{i:3,dx:0,dy:-1,c:'#eab308',n:'Y'}]
-        .forEach(b=>{
-            const x=bx+b.dx*d, y=by+b.dy*d;
-            const on=this.btns[b.i]?.pressed;
-            c.beginPath(); c.arc(x,y,r,0,Math.PI*2);
-            if(on){c.save();c.shadowColor=b.c;c.shadowBlur=14*s;c.fillStyle=b.c;c.fill();c.restore();c.fillStyle=b.c;c.fill();}
-            else{c.fillStyle='#303030';c.fill();c.strokeStyle='#444';c.lineWidth=1.2;c.stroke();}
-            c.fillStyle=on?'#fff':'#777'; c.font=`bold ${Math.round(10*s)}px 'JetBrains Mono',monospace`;
-            c.textAlign='center'; c.textBaseline='middle'; c.fillText(b.n,x,y);
-        });
-    }
-
-    dpad(c,cx,cy,s){
-        const dx=cx-15*s, dy=cy+40*s, sz=10*s, g=24*s;
-        /* center */
-        c.fillStyle='#282828'; this.rr(c,dx-sz,dy-sz,sz*2,sz*2,2*s); c.fill();
-        [{i:12,dx:0,dy:-1,n:'▲'},{i:13,dx:0,dy:1,n:'▼'},
-         {i:14,dx:-1,dy:0,n:'◀'},{i:15,dx:1,dy:0,n:'▶'}]
-        .forEach(d=>{
-            const x=dx+d.dx*g, y=dy+d.dy*g;
-            const on=this.btns[d.i]?.pressed;
-            c.fillStyle=on?'#fff':'#303030';
-            this.rr(c,x-sz,y-sz,sz*2,sz*2,2*s); c.fill();
-            if(on){c.save();c.shadowColor='rgba(255,255,255,.2)';c.shadowBlur=8*s;c.fill();c.restore();}
-            c.fillStyle=on?'#000':'#666'; c.font=`${Math.round(9*s)}px sans-serif`;
-            c.textAlign='center'; c.textBaseline='middle'; c.fillText(d.n,x,y);
-        });
-    }
-
-    bumpers(c,cx,cy,s){
-        [{i:4,x:cx-145*s,n:'LB'},{i:5,x:cx+90*s,n:'RB'}].forEach(b=>{
-            const on=this.btns[b.i]?.pressed;
-            this.rr(c,b.x,cy-68*s,55*s,13*s,4*s);
-            c.fillStyle=on?'#fff':'#252525'; c.fill();
-            if(on){c.save();c.shadowColor='rgba(255,255,255,.15)';c.shadowBlur=8*s;c.fill();c.restore();}
-            c.fillStyle=on?'#000':'#555'; c.font=`bold ${Math.round(7*s)}px 'JetBrains Mono',monospace`;
-            c.textAlign='center'; c.textBaseline='middle'; c.fillText(b.n,b.x+27.5*s,cy-61.5*s);
-        });
-    }
-
-    triggers(c,cx,cy,s){
-        const lt=this.btns[6]?.value||0, rt=this.btns[7]?.value||0;
-        const bw=55*s, bh=6*s, by=cy-82*s;
-        [{v:lt,x:cx-145*s,n:'LT'},{v:rt,x:cx+90*s,n:'RT'}].forEach(t=>{
-            this.rr(c,t.x,by,bw,bh,3*s); c.fillStyle='#181818'; c.fill();
-            if(t.v>.005){this.rr(c,t.x,by,bw*t.v,bh,3*s);c.fillStyle='#fff';c.fill();}
-            c.fillStyle='#444'; c.font=`${Math.round(6*s)}px 'JetBrains Mono',monospace`;
-            c.textAlign='center'; c.textBaseline='middle'; c.fillText(t.n,t.x+bw/2,by-7*s);
-        });
-    }
-
-    center(c,cx,cy,s){
-        const by=cy-18*s;
-        [{i:8,dx:-25,r:6,n:'◀'},{i:16,dx:0,r:9,n:'●',gl:true},{i:9,dx:25,r:6,n:'▶'}].forEach(b=>{
-            const x=cx+b.dx*s, on=this.btns[b.i]?.pressed;
-            c.beginPath(); c.arc(x,by,b.r*s,0,Math.PI*2);
-            if(on){
-                c.save();
-                if(b.gl){c.shadowColor='#eab308';c.shadowBlur=12*s;c.fillStyle='#eab308';}
-                else{c.shadowColor='rgba(255,255,255,.2)';c.shadowBlur=8*s;c.fillStyle='#fff';}
-                c.fill(); c.restore(); c.fill();
-            }else{c.fillStyle='#303030';c.fill();}
-            c.fillStyle=on?(b.gl?'#000':'#000'):'#555';
-            c.font=`${Math.round(7*s)}px sans-serif`;
-            c.textAlign='center'; c.textBaseline='middle'; c.fillText(b.n,x,by);
-        });
+        d.innerHTML=`<span class="t">[${new Date().toLocaleTimeString('pt-BR')}]</span> ${msg}`;
+        el.appendChild(d);el.scrollTop=el.scrollHeight;
+        while(el.children.length>80)el.removeChild(el.firstChild);
     }
 }
 
-/* boot */
-const tester = new GamepadTester();
+if('getGamepads'in navigator){new GamepadUI()}else{
+    const ov=$('overlay');
+    ov.innerHTML='<p style="font-size:15px;font-weight:600">Navegador não suportado</p><p style="font-size:12px;color:var(--text-muted);margin-top:4px">Use Chrome, Edge ou Firefox</p>';
+}
 </script>
 </body>
 </html>
